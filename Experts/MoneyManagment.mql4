@@ -16,13 +16,14 @@ extern string comment1 = "1- micro, 2- mini, 3- normal";
 extern string comment2 = "1 pip=$0.001, 1 pip=$0.01, 1 pip=$0.1";
 extern int accountType = 1;
 extern int riskInPercent = 1;
-extern string comment3 = "For ex. xm micro accounts where 0.1 lot = 1 micro lot";
+extern string comment3 = "For example xm micro accounts where 0.1 lot = 1 micro lot";
 extern int lotModifier = 10;
 extern int SLinFPips = 400;
-extern int withLoan = 0;
+extern bool withLoan = 0;
+extern string comment4 ="Clear arrows";
+extern bool clearArrows = 1;
 
 double riskedMoney;
-
 
 
 int hwnd=0;
@@ -88,6 +89,8 @@ double LotCalculate() {
 //+------------------------------------------------------------------+
 void OnTick()
   {
+   int obj_total, k;
+   string name;
 //---
   guiSetText(hwnd,LabelLOT,LotCalculate(),30,"Times New Roman");
   
@@ -116,6 +119,22 @@ void OnTick()
          //---
   }
   
+  
+  if (clearArrows == 1) {
+   
+   obj_total= ObjectsTotal();  
+   for (k= obj_total; k>=0; k--)
+      {
+      name= ObjectName(k); 
+      
+      //if (StringSubstr(name,0,4)=="Arrow"){
+      if ( ObjectType(name)==22 || ObjectType(name) == 23 ) {
+            ObjectDelete(name);
+            Print (name);
+         }
+      }
+  
+  }
 //--- return value of prev_calculated for next call
  
 }
