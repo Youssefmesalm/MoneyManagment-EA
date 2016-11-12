@@ -1,0 +1,123 @@
+//+------------------------------------------------------------------+
+//|                                               MoneyManagment.mq4 |
+//|                                                   Istvan Kosztik |
+//|                                             https://www.mql5.com |
+//+------------------------------------------------------------------+
+#property copyright "Istvan Kosztik"
+#property link      "https://www.kosztik.com/moneymanagment"
+#property version   "1.00"
+
+
+
+#include <mt4gui2.mqh>
+
+extern string comment0 = "Default settings are optimized to xm micro accounts";
+extern string comment1 = "1- micro, 2- mini, 3- normal";
+extern string comment2 = "1 pip=$0.001, 1 pip=$0.01, 1 pip=$0.1";
+extern int accountType = 1;
+extern int riskInPercent = 1;
+extern string comment3 = "For ex. xm micro accounts where 0.1 lot = 1 micro lot";
+extern int lotModifier = 10;
+extern int SLinFPips = 400;
+extern int withLoan = 0;
+
+double riskedMoney;
+
+
+
+int hwnd=0;
+int ButtonBUY,ButtonSELL, LabelLOT;
+
+//+------------------------------------------------------------------+
+//| Custom indicator initialization function                         |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+//--- indicator buffers mapping
+   hwnd=WindowHandle(Symbol(),Period());
+   guiRemoveAll(hwnd);
+   BuildInterface();
+//---
+   return(INIT_SUCCEEDED);
+  }
+  
+
+void BuildInterface() {
+
+   ButtonBUY=guiAdd(hwnd,"button",500,5,50,30,"BUY");
+   guiSetBgColor(hwnd,ButtonBUY,Green);
+   LabelLOT  = guiAdd(hwnd,"label",450,5,50,30,"");
+   guiSetBgColor(hwnd,LabelLOT,White);
+   ButtonSELL=guiAdd(hwnd,"button",400,5,50,30,"SELL");
+   guiSetBgColor(hwnd,ButtonSELL,Red);
+
+  
+
+}
+
+//+------------------------------------------------------------------+
+//| Custom indicator iteration function                              |
+//+------------------------------------------------------------------+
+double LotCalculate() {
+   int ratio;
+   double calculatedLot, accountMoney;
+   // kiszamolom a equity risInPercent százalékát
+   if (withLoan == 1) {
+      accountMoney = AccountEquity();
+   } else {
+      accountMoney = AccountBalance();
+   }
+   riskedMoney = (accountMoney * riskInPercent) / 100;
+   
+   switch ( accountType )                           // Operator header 
+      {                                          // Opening brace
+      case 1: ratio = 100; break;                   // One of the 'case' variations 
+      case 2: ratio = 10;  break;                  // One of the 'case' variations 
+      case 3: ratio = 1;   break;
+      //[default: Operators]                        // Variation without any parameter
+      }   
+      
+   calculatedLot = (0.1*riskedMoney) /(SLinFPips/ratio) ;
+   if (lotModifier>0) calculatedLot = calculatedLot * lotModifier;
+   
+  return( NormalizeDouble(calculatedLot, 2) );    
+}
+  
+//+------------------------------------------------------------------+
+//| Custom indicator iteration function                              |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+//---
+  guiSetText(hwnd,LabelLOT,LotCalculate(),30,"Times New Roman");
+  
+  
+  if(guiIsClicked(hwnd,ButtonBUY))
+  {
+      int ticket=OrderSend(Symbol(),OP_BUY,LotCalculate(),Ask,3,0,0,"My Buy order",16384,0,clrGreen);
+      if(ticket<0)
+      {
+         Print("OrderSend failed with error #",GetLastError());
+      }
+      else
+         Print("OrderSend placed successfully");
+         //---
+  }
+  
+  if(guiIsClicked(hwnd,ButtonSELL))
+  {
+      int ticket=OrderSend(Symbol(),OP_SELL,LotCalculate(),Bid,3,0,0,"My Sell order",16384,0,clrGreen);
+      if(ticket<0)
+      {
+         Print("OrderSend failed with error #",GetLastError());
+      }
+      else
+         Print("OrderSend placed successfully");
+         //---
+  }
+  
+//--- return value of prev_calculated for next call
+ 
+}
+
+//+------------------------------------------------------------------+
