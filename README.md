@@ -13,7 +13,4 @@ which any other case must be set to 1.
 
 
 
-Buy me a cofee :)
-if you find this tool useful:
-http://www.kosztik.hu/payment
 
